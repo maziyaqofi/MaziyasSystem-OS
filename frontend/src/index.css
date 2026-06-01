@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+body {
+  font-family: "DM Sans", sans-serif;
+}
+
+.energy-slider {
+  height: 28px;
+  cursor: pointer;
+  appearance: none;
+  background: transparent;
+}
+
+.energy-slider:focus {
+  outline: none;
+}
+
+.energy-slider::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #e05589 0%,
+    #e05589 var(--energy-progress),
+    #f6a8c8 var(--energy-progress),
+    #f6a8c8 100%
+  );
+}
+
+.energy-slider::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+  margin-top: -8px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: #c43870;
+  box-shadow: 0 4px 12px rgba(196, 56, 112, 0.25);
+}
+
+.energy-slider::-moz-range-track {
+  height: 12px;
+  border-radius: 999px;
+  background: #f6a8c8;
+}
+
+.energy-slider::-moz-range-progress {
+  height: 12px;
+  border-radius: 999px;
+  background: #e05589;
+}
+
+.energy-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: #c43870;
+  box-shadow: 0 4px 12px rgba(196, 56, 112, 0.25);
+}
