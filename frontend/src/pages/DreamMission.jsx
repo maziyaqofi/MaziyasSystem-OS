@@ -1,23 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Trash2, Plus } from "lucide-react";
 
 function DreamMission() {
   const STORAGE_KEY = "maziyas_dream_mission";
 
-  const [mission, setMission] = useState({
-    title: "Dubai Mission",
-    why: "Meet someone important and finish what must be finished.",
-    targetDate: "2027-12-31",
-    nextAction: "Update CV",
-    milestones: [],
+  const [mission, setMission] = useState(() => {
+    const defaultMission = {
+      title: "Dubai Mission",
+      why: "Meet someone important and finish what must be finished.",
+      targetDate: "2027-12-31",
+      nextAction: "Update CV",
+      milestones: [],
+    };
+
+    try {
+      const savedMission = localStorage.getItem(STORAGE_KEY);
+      return savedMission ? JSON.parse(savedMission) : defaultMission;
+    } catch {
+      return defaultMission;
+    }
   });
 
   const [newMilestone, setNewMilestone] = useState("");
-
-  useEffect(() => {
-    const savedMission = localStorage.getItem(STORAGE_KEY);
-    if (savedMission) setMission(JSON.parse(savedMission));
-  }, []);
 
   const saveMission = (updatedMission) => {
     setMission(updatedMission);

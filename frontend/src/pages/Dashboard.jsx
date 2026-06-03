@@ -12,6 +12,16 @@ const formatDateKey = (date = new Date()) => {
 };
 
 function Dashboard() {
+  const TASK_KEY = "maziyas_tasks";
+
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const savedTasks = JSON.parse(localStorage.getItem(TASK_KEY)) || [];
+      return Array.isArray(savedTasks) ? savedTasks : [];
+    } catch {
+      return [];
+    }
+  });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
@@ -71,6 +81,34 @@ function Dashboard() {
           todaysLogs.length
         ).toFixed(1)
       : "0.0";
+
+  const sevenDaysAgo = new Date(currentTime);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const taskDoneLast7Days = tasks.filter((task) => {
+    if (task.status !== "Done" || !task.completedAt) {
+      return false;
+    }
+
+    return new Date(task.completedAt) >= sevenDaysAgo;
+  }).length;
+
+  const todayPriorityTasks = tasks
+    .filter((task) => {
+      if (task.status !== "Done") {
+        return true;
+      }
+
+      return (
+        task.completedAt && formatDateKey(new Date(task.completedAt)) === todayKey
+      );
+    })
+    .sort((firstTask, secondTask) => {
+      if (!firstTask.dueDate) return 1;
+      if (!secondTask.dueDate) return -1;
+
+      return new Date(firstTask.dueDate) - new Date(secondTask.dueDate);
+    })
+    .slice(0, 3);
 
   const monthlyActiveDays = new Set(
     emotionalLogs
@@ -176,6 +214,22 @@ function Dashboard() {
     alert("Emotional check-in berhasil disimpan.");
   };
 
+  const handleToggleTaskDone = (taskId) => {
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId
+        ? {
+            ...task,
+            status: task.status === "Done" ? "Todo" : "Done",
+            completedAt:
+              task.status === "Done" ? null : new Date().toISOString(),
+          }
+        : task,
+    );
+
+    setTasks(updatedTasks);
+    localStorage.setItem(TASK_KEY, JSON.stringify(updatedTasks));
+  };
+
   return (
     <div className="space-y-7 bg-[#FFF0F5]">
       <div className="flex items-start justify-between gap-6">
@@ -264,9 +318,14 @@ function Dashboard() {
                 <span className="block">Done</span>
               </h3>
               <div className="h-14 w-px bg-[#FF9FC5]" />
-              <p className="text-center text-4xl font-bold text-black">
-                0<span className="text-2xl">/3</span>
-              </p>
+              <div className="text-center">
+                <p className="text-4xl font-bold text-black">
+                  {taskDoneLast7Days}
+                </p>
+                {/* <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#B07A95]">
+                  Last 7 Days
+                </p> */}
+              </div>
             </div>
           </div>
 
@@ -345,6 +404,99 @@ function Dashboard() {
               <p className="mt-2 text-l text-black">days check-in</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Baris 2 */}
+
+      <section>
+        <h2 className="mb-2 text-[#C43870]">
+          Priority Task & Habit Overview
+        </h2>
+
+        <div className="grid grid-cols-[1.2fr_1fr] gap-6">
+          {/* TODAY PRIORITY TASK */}
+          <div className="rounded-xl border border-[#FF9FC5] bg-white p-5">
+            <h3 className="mb-4 text-2xl font-bold text-black">
+              Today Priority Task
+            </h3>
+
+            <div className="space-y-3">
+              {todayPriorityTasks.length === 0 ? (
+                <p className="text-[#7A4A62]">No active task.</p>
+              ) : (
+                todayPriorityTasks.map((task) => {
+                  const isDone = task.status === "Done";
+
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between gap-4 border-b border-black/20 pb-3 last:border-b-0"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTaskDone(task.id)}
+                          aria-label={
+                            isDone
+                              ? `Mark ${task.title} as not done`
+                              : `Mark ${task.title} as done`
+                          }
+                          className={`h-4 w-4 shrink-0 rounded-full border transition ${
+                            isDone
+                              ? "border-[#C43870] bg-[#C43870]"
+                              : "border-[#C43870] hover:bg-[#FFD6E7]"
+                          }`}
+                        />
+
+                        <div className="min-w-0">
+                          <p
+                            className={`truncate text-lg text-black ${
+                              isDone ? "text-[#7A4A62] line-through" : ""
+                            }`}
+                          >
+                            {task.title}
+                          </p>
+                          <p className="text-sm text-[#7A4A62]">
+                            {task.dueDate
+                              ? `Due: ${task.dueDate}`
+                              : "No due date"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="shrink-0 rounded-full bg-[#FFD6E7] px-4 py-1 text-sm font-semibold text-[#C43870]">
+                        {task.priority}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* DUBAI MISSION */}
+          <div className="rounded-xl border border-[#FF9FC5] bg-white p-5">
+            <h3 className="mb-4 text-2xl font-bold text-black">
+              Maziya's Dream
+            </h3>
+
+            <div>
+              DREAM CONTENT
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Baris 3 */}
+
+      <section>
+        <h2 className="mb-2 text-[#C43870]">
+          Quick Journal
+        </h2>
+
+        <div className="rounded-xl border border-[#FF9FC5] bg-white p-5">
+          QUICK JOURNAL CONTENT
         </div>
       </section>
 

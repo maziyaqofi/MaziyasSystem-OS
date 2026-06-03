@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Trash2, CheckCircle, Circle, Clock } from "lucide-react";
 
 function TaskManager() {
   const STORAGE_KEY = "maziyas_tasks";
 
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const savedTasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      return Array.isArray(savedTasks) ? savedTasks : [];
+    } catch {
+      return [];
+    }
+  });
   const [taskForm, setTaskForm] = useState({
     title: "",
     priority: "Medium",
     dueDate: "",
   });
-
-  useEffect(() => {
-    const savedTasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    setTasks(savedTasks);
-  }, []);
 
   const saveTasks = (updatedTasks) => {
     setTasks(updatedTasks);
@@ -49,11 +51,18 @@ function TaskManager() {
 
   const handleChangeStatus = (id, newStatus) => {
     const updatedTasks = tasks.map((task) =>
-      task.id === id ? { ...task, status: newStatus } : task
-    );
+      task.id === id
+        ? {
+            ...task,
+            status: newStatus,
+            completedAt:
+              newStatus === "Done" ? new Date().toISOString() : null,
+          }
+        : task
+  );
 
-    saveTasks(updatedTasks);
-  };
+  saveTasks(updatedTasks);
+};
 
   const handleDeleteTask = (id) => {
     const confirmDelete = confirm("Hapus task ini?");
@@ -67,6 +76,8 @@ function TaskManager() {
   const doneTasks = tasks.filter((task) => task.status === "Done").length;
   const doingTasks = tasks.filter((task) => task.status === "Doing").length;
   const todoTasks = tasks.filter((task) => task.status === "Todo").length;
+  const activeTasks = tasks.filter((task) => task.status !== "Done");
+  const completedTasks = tasks.filter((task) => task.status === "Done");
 
   return (
     <div className="space-y-8">
@@ -159,13 +170,13 @@ function TaskManager() {
             <h2 className="text-lg font-bold text-[#3A1A2E]">Task List</h2>
           </div>
 
-          {tasks.length === 0 ? (
+          {activeTasks.length === 0 ? (
             <div className="p-8 text-center text-[#7A4A62]">
               Belum ada task. Tambahkan task pertamamu.
             </div>
           ) : (
             <div className="space-y-4 p-6">
-              {tasks.map((task) => (
+              {activeTasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -176,6 +187,65 @@ function TaskManager() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-[#FFB3CF] bg-white">
+        <div className="border-b border-[#FFD6E7] px-6 py-5">
+          <h2 className="text-lg font-bold text-[#3A1A2E]">
+            Completed History
+          </h2>
+        </div>
+
+        {completedTasks.length === 0 ? (
+          <div className="p-8 text-center text-[#7A4A62]">
+            Belum ada task yang selesai.
+          </div>
+        ) : (
+          <div className="space-y-4 p-6">
+            {completedTasks.map((task) => (
+              <div
+                key={task.id}
+                className="rounded-3xl border border-[#FFD6E7] bg-white p-5"
+              >
+                <div className="flex items-start justify-between gap-5">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#3A1A2E] line-through">
+                      {task.title}
+                    </h3>
+
+                    <p className="mt-2 text-sm text-[#7A4A62]">
+                      Priority: {task.priority}
+                    </p>
+
+                    <p className="mt-1 text-sm text-[#7A4A62]">
+                      Due: {task.dueDate}
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-[#C43870]">
+                      Completed:{" "}
+                      {task.completedAt
+                        ? new Date(task.completedAt).toLocaleString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "-"}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className="rounded-xl border border-[#EAEAEA] p-3 text-[#3A1A2E] hover:bg-[#FFF0F5] hover:text-[#C43870]"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -250,8 +320,12 @@ function TaskCard({ task, onChangeStatus, onDelete }) {
           </button>
         ))}
       </div>
+
+
     </div>
   );
 }
+
+
 
 export default TaskManager;

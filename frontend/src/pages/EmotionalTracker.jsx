@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
 function EmotionalTracker() {
   const STORAGE_KEY = "maziyas_emotional_logs";
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(() => {
+    try {
+      const savedLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      return Array.isArray(savedLogs) ? savedLogs : [];
+    } catch {
+      return [];
+    }
+  });
   const [openDate, setOpenDate] = useState(null);
-
-  useEffect(() => {
-    const savedLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    setLogs(savedLogs);
-  }, []);
 
   const totalCheckIn = logs.length;
 
